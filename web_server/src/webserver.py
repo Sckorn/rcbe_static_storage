@@ -44,27 +44,18 @@ def parse_argument(argv):
     argument parser for server configuration
     """
     parser = argparse.ArgumentParser(description="RCBE WWW Static Files Storage Server")
-    parser.add_argument('-n', '--name', default='80', help='Webserver name')
-    parser.add_argument('-p', '--port', default='80', help='Webserver Port number')
-    parser.add_argument('-w', '--webpath', default='www', help='package relative path to web pages')
-    parser.add_argument('--cached', default='true', help='static file is cached')
-    parser.add_argument('--start_port', default='8000', help='setting up port scan range')
-    parser.add_argument('--end_port', default='9000', help='setting up port scan range')
-    parser.add_argument('--upload_path', default='/tmp/upload/', help='server file upload path')
-    parser.add_argument('--tmp_path', default='/tmp/', help='temp files for x3d display, directory is cleared on shutdown')
-    parser.add_argument('--x3d_handler', default='/x3d/', help='handler for x3d files')
+    parser.add_argument('-p', '--port', default='8080', help='Webserver Port number')
+    parser.add_argument('-s', '--share', default='/tmp/share/', help='server storage path')
 
     parsed_args = parser.parse_args(argv)
 
-    return parsed_args.name, parsed_args.webpath, (parsed_args.port, parsed_args.start_port, parsed_args.end_port), parsed_args.cached, parsed_args.upload_path, parsed_args.tmp_path, parsed_args.x3d_handler
+    return parsed_args.port, parsed_args.share
 
 
 if __name__ == '__main__':
     argv = sys.argv
-    name, webpath, port, cached, upload_path, tmp_path, x3d_handler = parse_argument(argv[1:])
+    port, share = parse_argument(argv[1:])
 
-    cached = False if cached in [0, False, 'false', 'False'] else True
-
-    webserver = www.WWWServer(name, webpath, port, cached, upload_path, tmp_path, x3d_handler)
+    webserver = www.WWWServer(port, share)
     webserver.loginfo("Initialised")
     webserver.spin()

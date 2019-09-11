@@ -42,27 +42,21 @@ import tornado.ioloop  # rosbridge installs tornado
 import tornado.web
 import shutil
 from .webrequest_handler import WebRequestHandler
-from .webconfig_handler import WebConfigHandler
-from .x3d_handler import X3dHandler
 
 DefaultPort = 9091
+LoggerName = "RCBE_WWW:"
 
 class WWWServer():
 
-    def __init__(self, name, webpath, ports, cached, upload_path, tmp_path, x3d_handler):
+    def __init__(self, port, share):
         '''
           :param str name: webserver name
           :param str webpath: package relative path to web page source.
           :param tuple ports: ports to use in webserver. Provides default and scan range (default, start, end)
         '''
-        self._name = name
-        self._webpath = webpath
-        self._ports = ports
-        self._cached = cached
+        self._port = port
+        self._share = share
         self._logger = self._set_logger()
-        self._upload_path = upload_path
-        self._tmp_path = tmp_path
-        self._x3d_handler = x3d_handler
         self._application = self._create_webserver()
 
     def _cleanup_temp(self):
@@ -94,41 +88,18 @@ class WWWServer():
                 self.set_header("Access-Control-Allow-Headers", "x-requested-with")
                 self.set_header("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
 
-        if not os.path.exists(self._tmp_path):
-            os.makedirs(self._tmp_path)
+        if not os.path.exists(self._share):
+            os.makedirs(self._share)
 
-        file_handler = StaticFileHandler if self._cached else NoCacheStaticFileHandler
+        handlers = [(r'/static/(.*)', StaticFileHandler, {'path': self._share})]
 
-        handlers = [(r"/", WebRequestHandler, {"upload_path": self._upload_path})]
-
-        rosbridge_port = int(os.environ.get('SERVICE_PORT', DefaultPort))
-        config_handler = ("/app.js", WebConfigHandler, {"port": rosbridge_port})
-        handlers.append(config_handler)
-
-        x3d_handler = ("/x3d/(.*).x3d", X3dHandler, {"files_path": self._tmp_path})
-        handlers.append(x3d_handler)
-
-        self.loginfo("Weg Page root  : %s"%(self._webpath))
-        self.loginfo("Rosbridge port : %s"%(rosbridge_port))
         application = tornado.web.Application(handlers)
         return application
 
     def _bind_webserver(self):
-        default, start, end = self._ports
-
         """ First, we try the default http port """
-        bound = self._bind_to_port(self._application, default)
-        if not bound:
-            """ Otherwise bind any available port within the specified range """
-            bound = self._bind_in_range(self._application, start, end)
+        bound = self._bind_to_port(self._application, self._port)
         return True
-
-    def _bind_in_range(self, application, start_port, end_port):
-        if (end_port > start_port):
-            for i in range(start_port, end_port):
-                if self._bind_to_port(application, i):
-                    return True
-        return False
 
     def _bind_to_port(self, application, portno):
         self.loginfo("Attempting to start webserver on port %s"%portno)
@@ -157,7 +128,7 @@ class WWWServer():
         try:
             tornado.ioloop.IOLoop.instance().start()
         except KeyboardInterrupt:
-            self._cleanup_temp()
+            #self._cleanup_temp()
             self.loginfo("Webserver shutting down")
 
     def spin(self):
@@ -191,10 +162,10 @@ class WWWServer():
 
 
     def loginfo(self, msg):
-        self._logger.info('%s : %s'%(self._name, msg))
+        self._logger.info('%s : %s'%(LoggerName, msg))
 
     def logwarn(self, msg):
-        self._logger.warning('%s : %s'%(self._name, msg))
+        self._logger.warning('%s : %s'%(LoggerName, msg))
 
     def logerr(self, msg):
-        self._logger.error('%s : %s'%(self._name, msg))
+        self._logger.error('%s : %s'%(LoggerName, msg))

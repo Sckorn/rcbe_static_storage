@@ -48,8 +48,7 @@ class WebRequestHandler(tornado.web.RequestHandler):
         self.upload_path = upload_path
 
     def get(self):
-        self.write(
-          "<h1>ROS web server successfully started.</h1><h3>Package List</h1>")
+        self.write("<h1>RCBE Static File Storage</h1>")
 
     def post(self):
         fileinfo = self.request.files['filearg'][0]
