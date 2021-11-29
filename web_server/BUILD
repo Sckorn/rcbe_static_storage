@@ -8,5 +8,5 @@ py_binary(
     name = "webserver",
     srcs = ["src/webserver.py"],
     deps = ["www"],
-    python_version = "PY2",
+    python_version = "PY3",
 )

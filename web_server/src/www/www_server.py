@@ -60,7 +60,7 @@ class WWWServer():
         self._application = self._create_webserver()
 
     def _cleanup_temp(self):
-        print "cleaning up temp"
+        print("cleaning up temp")
         for the_file in os.listdir(self._tmp_path):
             file_path = os.path.join(self._tmp_path, the_file)
             try:
