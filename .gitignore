@@ -109,3 +109,5 @@ bazel-*
 run_docker.sh
 
 .idea/
+
+*.lock
